@@ -25,6 +25,7 @@ VERBOSE = os.getenv('VERBOSE', 'true').lower() in ('true', '1', 'yes')  # Enable
 GRAY = '8'
 RED = '11'
 
+
 def log(message: str, force: bool = False) -> None:
   """Print a log message if verbose mode is enabled.
 
@@ -39,6 +40,7 @@ def log(message: str, force: bool = False) -> None:
       # Fallback for Windows console that doesn't support Unicode
       print(message.encode('ascii', 'replace').decode('ascii'))
 
+
 def apply_name_replacement(subject_name: str) -> str:
   """Apply name replacements from constants.py to a subject name.
 
@@ -50,9 +52,10 @@ def apply_name_replacement(subject_name: str) -> str:
   """
   return NAME_REPLACEMENTS.get(subject_name, subject_name)
 
+
 def process_events_optimized(calendar: CalendarConnection, events_data: List[Dict[str, Any]],
-    busy_calendar_id: str, free_calendar_id: Optional[str] = None,
-    method: str = 'auto', verbose: bool = True) -> None:
+                             busy_calendar_id: str, free_calendar_id: Optional[str] = None,
+                             method: str = 'auto', verbose: bool = True) -> None:
   """Process calendar events using optimized methods.
 
   Args:
@@ -65,6 +68,8 @@ def process_events_optimized(calendar: CalendarConnection, events_data: List[Dic
   """
   # Set verbose mode in calendar handler
   calendar.verbose = verbose
+  # Reset statistics before processing
+  calendar.reset_stats()
   log(f"Processing {len(events_data)} events using {method} method...")
   start_time = time.time()
 
@@ -83,7 +88,8 @@ def process_events_optimized(calendar: CalendarConnection, events_data: List[Dic
       if use_dual_calendar and free_calendar_id:
         log(f"📅 Busy events → Main Calendar")
         log(f"📅 Free events → Free Calendar")
-        event_ids = calendar.createEventsThreadedWithCleanup(events_data, busy_calendar_id, free_calendar_id, max_workers=5)
+        event_ids = calendar.createEventsThreadedWithCleanup(
+            events_data, busy_calendar_id, free_calendar_id, max_workers=5)
       else:
         event_ids = calendar.createEventsThreaded(events_data, busy_calendar_id, max_workers=5)
     elif method == 'batch':
@@ -91,7 +97,8 @@ def process_events_optimized(calendar: CalendarConnection, events_data: List[Dic
       log("⚠️  Note: If batch fails, it will automatically fall back to individual processing")
       if use_dual_calendar and free_calendar_id:
         log("⚠️  Warning: Batch mode doesn't support dual-calendar cleanup. Using threaded mode instead.")
-        event_ids = calendar.createEventsThreadedWithCleanup(events_data, busy_calendar_id, free_calendar_id, max_workers=5)
+        event_ids = calendar.createEventsThreadedWithCleanup(
+            events_data, busy_calendar_id, free_calendar_id, max_workers=5)
       else:
         event_ids = calendar.createEventsBatch(events_data, busy_calendar_id, batch_size=10)
     elif method == 'individual':
@@ -104,26 +111,26 @@ def process_events_optimized(calendar: CalendarConnection, events_data: List[Dic
             target_calendar = busy_calendar_id if event_data['busy'] else free_calendar_id
             other_calendar = free_calendar_id if event_data['busy'] else busy_calendar_id
             event_id = calendar.createEventWithCleanup(
-              name=event_data['name'],
-              start=event_data['start_dt'],
-              end=event_data['end_dt'],
-              target_calendarId=target_calendar,
-              other_calendarId=other_calendar,
-              location=event_data['location'],
-              description=event_data['description'],
-              color=event_data['color'],
-              busy=event_data['busy']
+                name=event_data['name'],
+                start=event_data['start_dt'],
+                end=event_data['end_dt'],
+                target_calendarId=target_calendar,
+                other_calendarId=other_calendar,
+                location=event_data['location'],
+                description=event_data['description'],
+                color=event_data['color'],
+                busy=event_data['busy']
             )
           else:
             event_id = calendar.createEvent(
-              name=event_data['name'],
-              start=event_data['start_dt'],
-              end=event_data['end_dt'],
-              location=event_data['location'],
-              description=event_data['description'],
-              calendarId=busy_calendar_id,
-              color=event_data['color'],
-              busy=event_data['busy']
+                name=event_data['name'],
+                start=event_data['start_dt'],
+                end=event_data['end_dt'],
+                location=event_data['location'],
+                description=event_data['description'],
+                calendarId=busy_calendar_id,
+                color=event_data['color'],
+                busy=event_data['busy']
             )
           event_ids.append(event_id)
         except Exception as e:
@@ -136,7 +143,17 @@ def process_events_optimized(calendar: CalendarConnection, events_data: List[Dic
     failed_events = [id for id in event_ids if id.startswith('Error') or 'Error' in id]
 
     elapsed_time = time.time() - start_time
+
+    # Get and display statistics
+    stats = calendar.get_stats()
     log(f"✅ Successfully processed {len(successful_events)} events in {elapsed_time:.2f} seconds.", force=True)
+    log(
+        f"   📊 Stats: {
+            stats['created']} created, {
+            stats['updated']} updated, {
+            stats['skipped']} skipped (unchanged), {
+            stats['deleted']} deleted",
+        force=True)
     if failed_events:
       log(f"❌ Failed to process {len(failed_events)} events.", force=True)
 
@@ -147,6 +164,7 @@ def process_events_optimized(calendar: CalendarConnection, events_data: List[Dic
       process_events_optimized(calendar, events_data, busy_calendar_id, free_calendar_id, 'individual', verbose)
     else:
       log("Individual processing also failed. Please check your configuration.", force=True)
+
 
 def main() -> None:
   if CALENDAR_ID is None:
@@ -205,16 +223,24 @@ def main() -> None:
     location = SCHOOL_LOCATION if busy and SCHOOL_LOCATION is not None else ''
 
     events_data.append({
-      'name': name,
-      'start_dt': start,
-      'end_dt': end,
-      'location': location,
-      'description': description,
-      'color': color,
-      'busy': busy
+        'name': name,
+        'start_dt': start,
+        'end_dt': end,
+        'location': location,
+        'description': description,
+        'color': color,
+        'busy': busy
     })
 
   log(f"📊 Found {len(events_data)} total events: {busy_count} busy, {free_count} free")
-  process_events_optimized(calendar, events_data, CALENDAR_ID, FREE_CALENDAR_ID, method=PROCESSING_METHOD, verbose=VERBOSE)
+  process_events_optimized(
+      calendar,
+      events_data,
+      CALENDAR_ID,
+      FREE_CALENDAR_ID,
+      method=PROCESSING_METHOD,
+      verbose=VERBOSE)
+
+
 if __name__ == '__main__':
   main()
