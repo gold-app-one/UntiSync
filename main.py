@@ -6,6 +6,9 @@ import os
 import time
 from typing import List, Dict, Any, Optional
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 load_dotenv()
 
 SURNAME = os.getenv('SURNAME')
@@ -163,7 +166,9 @@ def main() -> None:
 
   conn = APIConnection(SURNAME, FORENAME, USERNAME, PASSWORD, SCHOOL)
   try:
-    calendar = CalendarConnection(credentialsPath='credentials.json', tokenPath='token.pickle')
+    credentials_path = os.path.join(SCRIPT_DIR, 'credentials.json')
+    token_path = os.path.join(SCRIPT_DIR, 'token.pickle')
+    calendar = CalendarConnection(credentialsPath=credentials_path, tokenPath=token_path)
   except FileNotFoundError as e:
     log(f"❌ Error: {e}", force=True)
     log("Please ensure the credentials.json file is in the correct location.", force=True)

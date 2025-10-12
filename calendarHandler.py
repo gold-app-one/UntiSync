@@ -26,17 +26,28 @@ class CalendarEvent(TypedDict):
     end: EventDateTime
 
 class CalendarConnection:
-  def __init__(self, credentialsPath: str = 'credentials.json', tokenPath: str = 'token.pickle') -> None:
+  def __init__(self, credentialsPath: Optional[str] = None, tokenPath: Optional[str] = None) -> None:
     """Initializes the CalendarConnection class, setting up the Google Calendar API client.
 
     Args:
-        credentialsPath (str, optional): Path to the credentials file. Defaults to 'credentials.json'.
-        tokenPath (str, optional): Path to store the authentication token. Defaults to 'token.pickle'.
+        credentialsPath (str, optional): Path to the credentials file. Defaults to 'credentials.json' in script directory.
+        tokenPath (str, optional): Path to store the authentication token. Defaults to 'token.pickle' in script directory.
 
     Raises:
         FileNotFoundError: If the credentials file is not found.
         ValueError: If the credentials file is not valid for an installed app.
     """
+    # Get the directory of the calling script
+    import inspect
+    caller_frame = inspect.stack()[1]
+    caller_dir = os.path.dirname(os.path.abspath(caller_frame.filename))
+    
+    # Use provided paths or default to script directory
+    if credentialsPath is None:
+        credentialsPath = os.path.join(caller_dir, 'credentials.json')
+    if tokenPath is None:
+        tokenPath = os.path.join(caller_dir, 'token.pickle')
+    
     if not os.path.exists(credentialsPath):
         raise FileNotFoundError(f"Credentials file not found: {credentialsPath}")
 
