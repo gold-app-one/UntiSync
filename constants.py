@@ -5,8 +5,8 @@ DAY = 24 * HOUR
 WEEK = 7 * DAY
 MONTH = 31 * DAY
 
-BACKWARD_TIME = WEEK
-FORWARD_TIME = 2 * WEEK
+BACKWARD_TIME: int = WEEK
+FORWARD_TIME: int = 2 * MONTH
 
 NAME_REPLACEMENTS: dict[str, str] = {
     'L12Ch-T': 'Chemie LK',
