@@ -1,0 +1,12 @@
+# Required packages for UntiSync
+
+# WebUntis API client
+webuntis
+
+# Google Calendar API
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+
+# Environment variable management
+python-dotenv
