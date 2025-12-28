@@ -148,11 +148,11 @@ def process_events_optimized(calendar: CalendarConnection, events_data: List[Dic
     stats = calendar.get_stats()
     log(f"✅ Successfully processed {len(successful_events)} events in {elapsed_time:.2f} seconds.", force=True)
     log(
-        f"   📊 Stats: {
+        f"""   📊 Stats: {
             stats['created']} created, {
             stats['updated']} updated, {
             stats['skipped']} skipped (unchanged), {
-            stats['deleted']} deleted",
+            stats['deleted']} deleted""",
         force=True)
     if failed_events:
       log(f"❌ Failed to process {len(failed_events)} events.", force=True)

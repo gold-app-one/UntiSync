@@ -76,12 +76,12 @@ class APIConnection:
       students = self.students
       rooms = self.rooms
       cancelled = self.cancelled
-      return f'{
-          'X' if cancelled else 'O'};{start}-+-{end} | cla={
+      return f'''{
+          "X" if cancelled else "O"};{start}-+-{end} | cla={
           str(klassen):^10}, sub={
           str(subjects):^15}, stu={
           students:^20}, room={
-          str(rooms):^15}'
+          str(rooms):^15}'''
 
     def __repr__(self) -> str:
       return self.__str__()
@@ -108,19 +108,36 @@ class APIConnection:
     Returns:
         List[APIConnection.Lesson]: List of lesson objects.
     """
-    with webuntis.Session(  # type: ignore
-        username=self.username,
-        password=self.password,
-        server='neilo.webuntis.com',
-        school=self.school,
-        useragent='WebUntis Test'
-    ).login() as s:
-      today = datetime.date.today() - datetime.timedelta(seconds=BACKWARD_TIME)
-      end = datetime.date.today() + datetime.timedelta(seconds=FORWARD_TIME)
-      timetable = s.timetable(start=today, end=end, student=s.get_student(self.surname, self.forename))  # type: ignore
-      for activity in timetable:
-        self.lessons.append(APIConnection.Lesson(activity))
-    self.lessons.sort(key=lambda l: l.start)
+    import time
+    max_retries = 3
+    
+    for attempt in range(max_retries):
+      try:
+        # Add a tiny delay between attempts
+        if attempt > 0:
+          time.sleep(0.5 * attempt)
+        
+        with webuntis.Session(  # type: ignore
+            username=self.username,
+            password=self.password,
+            server=f'{self.school}.webuntis.com',
+            school=self.school,
+            useragent='WebUntis Test'
+        ).login() as s:
+          today = datetime.date.today() - datetime.timedelta(seconds=BACKWARD_TIME)
+          end = datetime.date.today() + datetime.timedelta(seconds=FORWARD_TIME)
+          timetable = s.timetable(start=today, end=end, student=s.get_student(surname=self.surname, fore_name=self.forename))  # type: ignore
+          for activity in timetable:
+            self.lessons.append(APIConnection.Lesson(activity))
+        self.lessons.sort(key=lambda l: l.start)
+        return self.lessons
+      except Exception as e:
+        if attempt < max_retries - 1:
+          print(f"Attempt {attempt + 1} failed: {e}. Retrying...")
+        else:
+          print(f"All {max_retries} attempts failed. Last error: {e}")
+          raise
+    # This should never be reached, but satisfies type checker
     return self.lessons
 
 

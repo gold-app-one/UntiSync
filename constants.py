@@ -13,7 +13,7 @@ NAME_REPLACEMENTS: dict[str, str] = {
     'L12Ma-N': 'Mathe LK',
     'G12Phi-A': 'Philosophie',
     'G12In-B': 'Informatik',
-    'G12DS-C': 'DS',
+    'G12Ds-C': 'DS',
     'G12Ph-D': 'Physik',
     'G12EnZ-E': 'Englisch-Z',
     'G12De-F': 'Deutsch',
@@ -21,4 +21,5 @@ NAME_REPLACEMENTS: dict[str, str] = {
     'G12En-H': 'Englisch',
     'G12B09': 'Tennis',
     'Rel ev': 'Religion',
+    'NST': 'Nachschreiben',
 }
