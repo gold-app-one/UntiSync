@@ -177,16 +177,19 @@ def main():
   log("=" * 60)
 
   busy_events = get_future_events(calendar, CALENDAR_ID, "Busy Calendar")  # type: ignore
-  total_deleted += delete_events(calendar, CALENDAR_ID, busy_events, "Busy Calendar")
+  busy_deleted = delete_events(calendar, CALENDAR_ID, busy_events, "Busy Calendar")
+  total_deleted += busy_deleted
 
   # Clear future events from free calendar if in dual-calendar mode
+  free_deleted = 0
   if using_dual_calendar:
     log("\n" + "=" * 60)
     log("FREE CALENDAR")
     log("=" * 60)
 
     free_events = get_future_events(calendar, FREE_CALENDAR_ID, "Free Calendar")  # type: ignore
-    total_deleted += delete_events(calendar, FREE_CALENDAR_ID, free_events, "Free Calendar")  # type: ignore
+    free_deleted = delete_events(calendar, FREE_CALENDAR_ID, free_events, "Free Calendar")  # type: ignore
+    total_deleted += free_deleted
 
   # Final summary
   log("\n" + "=" * 60)
@@ -195,8 +198,8 @@ def main():
   log(f"✅ Total future events deleted: {total_deleted}")
 
   if using_dual_calendar:
-    log(f"   - Busy Calendar: {len(busy_events)} events deleted")  # type: ignore
-    log(f"   - Free Calendar: {len(free_events)} events deleted")  # type: ignore
+    log(f"   - Busy Calendar: {busy_deleted} events deleted")
+    log(f"   - Free Calendar: {free_deleted} events deleted")
 
   log("\n🎉 Future event clearing complete!")
   log("=" * 60)
