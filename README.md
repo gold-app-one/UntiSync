@@ -230,6 +230,18 @@ python clear_calendars.py --confirm
 python clear_calendars.py
 ```
 
+### Clear Only Future Events
+
+Deletes only future events while preserving past events:
+
+```bash
+# With confirmation prompt
+python clear_future_events.py --confirm
+
+# Without confirmation (immediate deletion)
+python clear_future_events.py
+```
+
 ### Check for Errors
 
 If sync fails, check:
@@ -379,6 +391,7 @@ UntiSync/
 ├── calendarHandler.py               # Google Calendar API wrapper
 ├── constants.py                     # Configuration & name replacements
 ├── clear_calendars.py               # Helper: Clear all events
+├── clear_future_events.py           # Helper: Clear only future events
 ├── credentials.json                 # Google OAuth credentials (you create)
 ├── token.pickle                     # Google auth token (auto-generated)
 ├── .env                             # Your configuration (you create)
